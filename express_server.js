@@ -1,10 +1,11 @@
 const express = require("express");
 const app = express();
 const PORT = 8080;
+const cookieParser = require("cookie-parser");
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
-
+app.use(cookieParser());
 app.set("view engine", "ejs");
 
 function generateRandomString() {
@@ -69,6 +70,13 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 // updates the URL resource
 app.post("/urls/:id", (req, res) => {
   urlDatabase[req.params.id] = req.body.longURL;
+  res.redirect("/urls");
+});
+
+// sets a cookie named username to value from login form and redirects to the /urls page 
+app.post("/login", (req, res) => {
+  const username = req.body.username;
+  res.cookie("username", username);
   res.redirect("/urls");
 });
 
