@@ -17,7 +17,7 @@ function generateRandomString() {
 function checkForExistingEmail(email) {
   for (const user in users) {
     if (email === users[user].email) {
-      return true;
+      return users[user].id;
     }
   }
   return false;
@@ -97,10 +97,17 @@ app.post("/urls/:id", (req, res) => {
   res.redirect("/urls");
 });
 
-// sets a cookie named username to value from login form and redirects to the /urls page 
+// sets a cookie named user_id and redirects to the /urls page 
 app.post("/login", (req, res) => {
-  const user_id = req.body.user_id;
-  res.cookie("user_id", user_id);
+  if (!checkForExistingEmail(req.body["email"])) {
+    return res.status(403).send("A user with this email was not found.");
+  }
+  const id = checkForExistingEmail(req.body["email"]);
+  if (users[id].password !== req.body["password"]) {
+    return res.status(403).send("Password is incorrect.");
+  }
+  const user = users[id];
+  res.cookie('user_id', user);
   res.redirect("/urls");
 });
 
@@ -110,7 +117,7 @@ app.get("/login", (req, res) => {
   res.render("login", templateVars);
 });
 
-// clears username cookie 
+// clears user_id cookie 
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
   res.redirect("/urls");
