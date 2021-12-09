@@ -104,6 +104,12 @@ app.post("/login", (req, res) => {
   res.redirect("/urls");
 });
 
+// GET /login endpoint that responds with the new login form template 
+app.get("/login", (req, res) => {
+  const templateVars = { user: req.cookies["user_id"] };
+  res.render("login", templateVars);
+});
+
 // clears username cookie 
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
