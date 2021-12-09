@@ -13,6 +13,16 @@ function generateRandomString() {
   return string;
 }
 
+// function to check if email is already in the users object 
+function checkForExistingEmail(email) {
+  for (const user in users) {
+    if (email === users[user].email) {
+      return true;
+    }
+  }
+  return false;
+}
+
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
@@ -108,6 +118,12 @@ app.get("/register", (req, res) => {
 
 // endpoint that handles the registration form data 
 app.post("/register", (req, res) => {
+  console.log(checkForExistingEmail(req.body["email"]));
+  if (!(req.body["email"]) || !(req.body["password"])) {
+    return res.status(400).send("Email or password invalid");
+  } else if (checkForExistingEmail(req.body["email"])) {
+    return res.status(400).send("A user with this email already exists");
+  } 
   const newID = generateRandomString();
   const user = { id: newID, email: req.body["email"], password: req.body["password"] };
   users[newID] = user;
