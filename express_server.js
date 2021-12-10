@@ -24,8 +24,10 @@ function checkForExistingEmail(email) {
 }
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  //"b2xVn2": "http://www.lighthouselabs.ca",
+  //"9sm5xK": "http://www.google.com"
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
 const users = { 
@@ -58,31 +60,33 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+// only registered and logged in users can create new URLs
 app.get("/urls/new", (req, res) => {
-  const templateVars = { user: req.cookies["user_id"] };
+  if (!req.cookies["user_id"]) {
+    res.redirect("/login");
+  }
+  const templateVars = { user: users[req.cookies["user_id"]] };
   res.render("urls_new", templateVars);
 });
 
 // saving shortURL and longURL to urlDatabase and redirects to /urls/:shortURL
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
+  urlDatabase[shortURL] = { longURL: req.body.longURL, userID: req.cookies["user_id"] };
   res.redirect(`/urls/:${shortURL}`);
-
 });
 
 //handles shortURL requests and redirects to longURL
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params["shortURL"]]["longURL"];
   if (!longURL) {
     res.send("Error, URL not found.");
-  } else {
-    res.redirect(longURL);
   }
+  res.redirect(longURL);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { user: req.cookies["user_id"], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: users[req.cookies["user_id"]] };
   res.render("urls_show", templateVars);
 }); 
 
