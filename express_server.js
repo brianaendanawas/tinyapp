@@ -21,11 +21,9 @@ function checkForExistingEmail(email) {
     }
   }
   return false;
-}
+};
 
 const urlDatabase = {
-  //"b2xVn2": "http://www.lighthouselabs.ca",
-  //"9sm5xK": "http://www.google.com"
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
@@ -34,7 +32,8 @@ const users = {
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
+    //password: "purple-monkey-dinosaur"
+    password: "hi"
   },
  "user2RandomID": {
     id: "user2RandomID", 
@@ -65,7 +64,7 @@ app.get("/urls/new", (req, res) => {
   if (!req.cookies["user_id"]) {
     res.redirect("/login");
   }
-  const templateVars = { user: users[req.cookies["user_id"]] };
+  const templateVars = { user: req.cookies["user_id"] };
   res.render("urls_new", templateVars);
 });
 
@@ -86,7 +85,7 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: users[req.cookies["user_id"]] };
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: req.cookies["user_id"] };
   res.render("urls_show", templateVars);
 }); 
 
