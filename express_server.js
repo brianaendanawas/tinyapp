@@ -23,6 +23,16 @@ function checkForExistingEmail(email) {
   return false;
 };
 
+function urlsForUser(id) {
+  let urlData = {};
+  for (const url in urlDatabase) {
+    if (id === urlDatabase[url].userID) {
+      urlData[url] = urlDatabase[url];
+    }
+  }
+  return urlData;
+}
+
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
@@ -55,8 +65,10 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { user: users[req.cookies["user_id"]], urls: urlDatabase };
-  console.log(users[req.cookies["user_id"]]);
+  if (!req.cookies["user_id"]) {
+    res.redirect("/login");
+  }
+  const templateVars = { user: users[req.cookies["user_id"]], urls: urlsForUser(req.cookies["user_id"]) };
   res.render("urls_index", templateVars);
 });
 
@@ -114,7 +126,6 @@ app.post("/login", (req, res) => {
   if (users[id].password !== req.body["password"]) {
     return res.status(403).send("Password is incorrect.");
   }
-  //const user = users[id];
   res.cookie('user_id', id);
   res.redirect("/urls");
 });
