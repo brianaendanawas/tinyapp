@@ -39,8 +39,8 @@ const urlDatabase = {
 };
 
 const users = { 
-  "userRandomID": {
-    id: "userRandomID", 
+  "aJ48lW": {
+    id: "aJ48lW", 
     email: "user@example.com", 
     //password: "purple-monkey-dinosaur"
     password: "hi"
@@ -69,7 +69,7 @@ app.get("/urls", (req, res) => {
     res.redirect("/login");
   }
   const templateVars = { user: users[req.cookies["user_id"]], urls: urlsForUser(req.cookies["user_id"]) };
-  res.render("urls_index", templateVars);
+  res.render("urls_index", templateVars); 
 });
 
 // only registered and logged in users can create new URLs
@@ -82,6 +82,9 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
+  if (!req.cookies["user_id"]) {
+    res.redirect("/login");
+  }
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = { longURL: req.body.longURL, userID: req.cookies["user_id"] };
   res.redirect(`/urls/`);
@@ -89,16 +92,21 @@ app.post("/urls", (req, res) => {
 
 //handles shortURL requests and redirects to longURL
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params["shortURL"]]["longURL"];
-  if (!longURL) {
-    res.send("Error, URL not found.");
+  let data = urlsForUser(req.cookies["user_id"]);
+  if (!data.hasOwnProperty(req.params.shortURL)) {
+    return res.status(403).send("You either do not have access to this URL, or you entered in invalid URL.");
+  } else {
+    const longURL = urlDatabase[req.params["shortURL"]]["longURL"];
+    if (!longURL) {
+      res.send("Error, URL not found.");
+    }
+    res.redirect(longURL); 
   }
-  res.redirect(longURL);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { user: users[req.cookies["user_id"]], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]["longURL"] };
-  res.render("urls_show", templateVars);
+  res.render("urls_show", templateVars); 
 }); 
 
 app.post("/urls/:shortURL", (req, res) => {
