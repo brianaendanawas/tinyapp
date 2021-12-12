@@ -55,7 +55,8 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { user: req.cookies["user_id"], urls: urlDatabase };
+  const templateVars = { user: users[req.cookies["user_id"]], urls: urlDatabase };
+  console.log(users[req.cookies["user_id"]]);
   res.render("urls_index", templateVars);
 });
 
@@ -63,16 +64,15 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   if (!req.cookies["user_id"]) {
     res.redirect("/login");
-  }
-  const templateVars = { user: req.cookies["user_id"] };
+  } 
+  const templateVars = { user: users[req.cookies["user_id"]] };
   res.render("urls_new", templateVars);
 });
 
-// saving shortURL and longURL to urlDatabase and redirects to /urls/:shortURL
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = { longURL: req.body.longURL, userID: req.cookies["user_id"] };
-  res.redirect(`/urls/:${shortURL}`);
+  res.redirect(`/urls/`);
 });
 
 //handles shortURL requests and redirects to longURL
@@ -85,9 +85,14 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: req.cookies["user_id"] };
+  const templateVars = { user: users[req.cookies["user_id"]], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]["longURL"] };
   res.render("urls_show", templateVars);
 }); 
+
+app.post("/urls/:shortURL", (req, res) => {
+  urlDatabase[req.params.shortURL]["longURL"] = req.body["longURL"];
+  res.redirect("/urls");
+});
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   delete urlDatabase[req.params.shortURL];
@@ -109,14 +114,14 @@ app.post("/login", (req, res) => {
   if (users[id].password !== req.body["password"]) {
     return res.status(403).send("Password is incorrect.");
   }
-  const user = users[id];
-  res.cookie('user_id', user);
+  //const user = users[id];
+  res.cookie('user_id', id);
   res.redirect("/urls");
 });
 
 // GET /login endpoint that responds with the new login form template 
 app.get("/login", (req, res) => {
-  const templateVars = { user: req.cookies["user_id"] };
+  const templateVars = { user: users[req.cookies["user_id"]] };
   res.render("login", templateVars);
 });
 
@@ -128,13 +133,12 @@ app.post("/logout", (req, res) => {
 
 // create endpoint for register 
 app.get("/register", (req, res) => {
-  const templateVars = { user: req.cookies["user_id"] };
+  const templateVars = { user: users[req.cookies["user_id"]] };
   res.render("register", templateVars);
 });
 
 // endpoint that handles the registration form data 
 app.post("/register", (req, res) => {
-  console.log(checkForExistingEmail(req.body["email"]));
   if (!(req.body["email"]) || !(req.body["password"])) {
     return res.status(400).send("Email or password invalid");
   } else if (checkForExistingEmail(req.body["email"])) {
@@ -143,11 +147,10 @@ app.post("/register", (req, res) => {
   const newID = generateRandomString();
   const user = { id: newID, email: req.body["email"], password: req.body["password"] };
   users[newID] = user;
-  res.cookie('user_id', user);
-  console.log(users);
+  res.cookie('user_id', newID);
   res.redirect("/urls");
 });
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
-});
+}); 
