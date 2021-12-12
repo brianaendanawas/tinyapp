@@ -110,13 +110,23 @@ app.get("/urls/:shortURL", (req, res) => {
 }); 
 
 app.post("/urls/:shortURL", (req, res) => {
-  urlDatabase[req.params.shortURL]["longURL"] = req.body["longURL"];
-  res.redirect("/urls");
+  let data = urlsForUser(req.cookies["user_id"]);
+  if (!data.hasOwnProperty(req.params.shortURL)) {
+    return res.status(403).send("You do not have access to this URL.");
+  } else {
+    urlDatabase[req.params.shortURL]["longURL"] = req.body["longURL"];
+    res.redirect("/urls");
+  }
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  delete urlDatabase[req.params.shortURL];
-  res.redirect("/urls");
+  let data = urlsForUser(req.cookies["user_id"]);
+  if (!data.hasOwnProperty(req.params.shortURL)) {
+    return res.status(403).send("You do not have access to this URL.");
+  } else {
+    delete urlDatabase[req.params.shortURL];
+    res.redirect("/urls");
+  }
 });
 
 // updates the URL resource
