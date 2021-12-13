@@ -2,11 +2,17 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 const cookieParser = require("cookie-parser");
+const bcrypt = require("bcrypt");
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 app.set("view engine", "ejs");
+
+/*
+const password = "hi";
+const hashedPassword = bcrypt.hashSync(password, 10);
+console.log(bcrypt.compareSync("hi", hashedPassword)); */
 
 function generateRandomString() {
   let string = Math.random().toString(36).substr(2, 6);
@@ -39,17 +45,17 @@ const urlDatabase = {
 };
 
 const users = { 
+  /*
   "aJ48lW": {
     id: "aJ48lW", 
     email: "user@example.com", 
-    //password: "purple-monkey-dinosaur"
     password: "hi"
   },
  "user2RandomID": {
     id: "user2RandomID", 
     email: "user2@example.com", 
     password: "dishwasher-funk"
-  }
+  } */
 };
 
 app.get("/", (req, res) => {
@@ -135,23 +141,24 @@ app.post("/urls/:id", (req, res) => {
   res.redirect("/urls");
 });
 
-// sets a cookie named user_id and redirects to the /urls page 
-app.post("/login", (req, res) => {
-  if (!checkForExistingEmail(req.body["email"])) {
-    return res.status(403).send("A user with this email was not found.");
-  }
-  const id = checkForExistingEmail(req.body["email"]);
-  if (users[id].password !== req.body["password"]) {
-    return res.status(403).send("Password is incorrect.");
-  }
-  res.cookie('user_id', id);
-  res.redirect("/urls");
-});
-
 // GET /login endpoint that responds with the new login form template 
 app.get("/login", (req, res) => {
   const templateVars = { user: users[req.cookies["user_id"]] };
   res.render("login", templateVars);
+});
+
+// sets a cookie named user_id and redirects to the /urls page 
+app.post("/login", (req, res) => {
+  
+  if (!checkForExistingEmail(req.body["email"])) {
+    return res.status(403).send("A user with this email was not found.");
+  }
+  const id = checkForExistingEmail(req.body["email"]);
+  if (!bcrypt.compareSync(req.body.password, users[id].password)) {
+    return res.status(403).send("Password is incorrect.");
+  }
+  res.cookie('user_id', id);
+  res.redirect("/urls"); 
 });
 
 // clears user_id cookie 
@@ -174,8 +181,9 @@ app.post("/register", (req, res) => {
     return res.status(400).send("A user with this email already exists");
   } 
   const newID = generateRandomString();
-  const user = { id: newID, email: req.body["email"], password: req.body["password"] };
+  const user = { id: newID, email: req.body["email"], password: bcrypt.hashSync(req.body["password"], 10) };
   users[newID] = user;
+  //console.log(user);
   res.cookie('user_id', newID);
   res.redirect("/urls");
 });
