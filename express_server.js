@@ -3,26 +3,12 @@ const app = express();
 const PORT = 8080;
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcrypt");
+const { getUserByEmail, generateRandomString } = require('./helpers');
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({ name: "session", secret: "purple-dinosaur" }));
 app.set("view engine", "ejs");
-
-function generateRandomString() {
-  let string = Math.random().toString(36).substr(2, 6);
-  return string;
-}
-
-// function to check if email is already in the users object 
-function checkForExistingEmail(email) {
-  for (const user in users) {
-    if (email === users[user].email) {
-      return users[user].id;
-    }
-  }
-  return false;
-};
 
 function urlsForUser(id) {
   let urlData = {};
@@ -32,7 +18,7 @@ function urlsForUser(id) {
     }
   }
   return urlData;
-}
+};
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
@@ -145,10 +131,10 @@ app.get("/login", (req, res) => {
 // sets a cookie named user_id and redirects to the /urls page 
 app.post("/login", (req, res) => {
   
-  if (!checkForExistingEmail(req.body["email"])) {
+  if (!getUserByEmail(req.body["email"], users)) {
     return res.status(403).send("A user with this email was not found.");
   }
-  const id = checkForExistingEmail(req.body["email"]);
+  const id = getUserByEmail(req.body["email"], users);
   if (!bcrypt.compareSync(req.body.password, users[id].password)) {
     return res.status(403).send("Password is incorrect.");
   }
@@ -172,7 +158,7 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   if (!(req.body["email"]) || !(req.body["password"])) {
     return res.status(400).send("Email or password invalid");
-  } else if (checkForExistingEmail(req.body["email"])) {
+  } else if (getUserByEmail(req.body["email"], users)) {
     return res.status(400).send("A user with this email already exists");
   } 
   const newID = generateRandomString();
