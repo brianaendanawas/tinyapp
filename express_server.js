@@ -18,26 +18,14 @@ function urlsForUser(id) {
     }
   }
   return urlData;
-};
+}
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
-const users = { 
-  /*
-  "aJ48lW": {
-    id: "aJ48lW", 
-    email: "user@example.com", 
-    password: "hi"
-  },
- "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
-    password: "dishwasher-funk"
-  } */
-};
+const users = {};
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -56,14 +44,14 @@ app.get("/urls", (req, res) => {
     res.redirect("/login");
   }
   const templateVars = { user: users[req.session["user_id"]], urls: urlsForUser(req.session["user_id"]) };
-  res.render("urls_index", templateVars); 
+  res.render("urls_index", templateVars);
 });
 
 // only registered and logged in users can create new URLs
 app.get("/urls/new", (req, res) => {
   if (!req.session["user_id"]) {
     res.redirect("/login");
-  } 
+  }
   const templateVars = { user: users[req.session["user_id"]] };
   res.render("urls_new", templateVars);
 });
@@ -74,7 +62,7 @@ app.post("/urls", (req, res) => {
   }
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = { longURL: req.body.longURL, userID: req.session["user_id"] };
-  res.redirect(`/urls/`);
+  res.redirect(`/urls/${shortURL}`);
 });
 
 //handles shortURL requests and redirects to longURL
@@ -87,14 +75,14 @@ app.get("/u/:shortURL", (req, res) => {
     if (!longURL) {
       res.send("Error, URL not found.");
     }
-    res.redirect(longURL); 
+    res.redirect(longURL);
   }
 });
 
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { user: users[req.session["user_id"]], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]["longURL"] };
-  res.render("urls_show", templateVars); 
-}); 
+  res.render("urls_show", templateVars);
+});
 
 app.post("/urls/:shortURL", (req, res) => {
   let data = urlsForUser(req.session["user_id"]);
@@ -122,15 +110,14 @@ app.post("/urls/:id", (req, res) => {
   res.redirect("/urls");
 });
 
-// GET /login endpoint that responds with the new login form template 
+// GET /login endpoint that responds with the new login form template
 app.get("/login", (req, res) => {
   const templateVars = { user: users[req.session["user_id"]] };
   res.render("login", templateVars);
 });
 
-// sets a cookie named user_id and redirects to the /urls page 
+// sets a cookie named user_id and redirects to the /urls page
 app.post("/login", (req, res) => {
-  
   if (!getUserByEmail(req.body["email"], users)) {
     return res.status(403).send("A user with this email was not found.");
   }
@@ -139,28 +126,28 @@ app.post("/login", (req, res) => {
     return res.status(403).send("Password is incorrect.");
   }
   req.session["user_id"] = id;
-  res.redirect("/urls"); 
+  res.redirect("/urls");
 });
 
-// clears user_id cookie 
+// clears user_id cookie
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect("/urls");
 });
 
-// create endpoint for register 
+// create endpoint for register
 app.get("/register", (req, res) => {
   const templateVars = { user: users[req.session["user_id"]] };
   res.render("register", templateVars);
 });
 
-// endpoint that handles the registration form data 
+// endpoint that handles the registration form data
 app.post("/register", (req, res) => {
   if (!(req.body["email"]) || !(req.body["password"])) {
     return res.status(400).send("Email or password invalid");
   } else if (getUserByEmail(req.body["email"], users)) {
     return res.status(400).send("A user with this email already exists");
-  } 
+  }
   const newID = generateRandomString();
   const user = { id: newID, email: req.body["email"], password: bcrypt.hashSync(req.body["password"], 10) };
   users[newID] = user;
