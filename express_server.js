@@ -28,7 +28,7 @@ const urlDatabase = {
 const users = {};
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.redirect("/urls");
 });
 
 app.get("/urls.json", (req, res) => {
@@ -72,8 +72,13 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { user: users[req.session["user_id"]], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]["longURL"] };
-  res.render("urls_show", templateVars);
+  let data = urlsForUser(req.session["user_id"]);
+  if (!data.hasOwnProperty(req.params.shortURL)) {
+    return res.status(403).send("You need to login to access this URL.");
+  } else {
+    const templateVars = { user: users[req.session["user_id"]], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]["longURL"] };
+    res.render("urls_show", templateVars);
+  }
 });
 
 app.post("/urls/:shortURL", (req, res) => {
