@@ -65,18 +65,10 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-//handles shortURL requests and redirects to longURL
+// handles shortURL requests and redirects to longURL
 app.get("/u/:shortURL", (req, res) => {
-  let data = urlsForUser(req.session["user_id"]);
-  if (!data.hasOwnProperty(req.params.shortURL)) {
-    return res.status(403).send("You either do not have access to this URL, or you entered in invalid URL.");
-  } else {
-    const longURL = urlDatabase[req.params["shortURL"]]["longURL"];
-    if (!longURL) {
-      res.send("Error, URL not found.");
-    }
-    res.redirect(longURL);
-  }
+  const longURL = urlDatabase[req.params["shortURL"]]["longURL"];
+  res.redirect(longURL);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
