@@ -10,6 +10,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({ name: "session", secret: "purple-dinosaur" }));
 app.set("view engine", "ejs");
 
+// returns an object with the short URLs for the ID
 function urlsForUser(id) {
   let urlData = {};
   for (const url in urlDatabase) {
@@ -27,6 +28,7 @@ const urlDatabase = {
 
 const users = {};
 
+// redirect to /urls 
 app.get("/", (req, res) => {
   res.redirect("/urls");
 });
@@ -39,6 +41,7 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
+// redirect to /login if user is not logged in, otherwise display URLs 
 app.get("/urls", (req, res) => {
   if (!req.session["user_id"]) {
     res.redirect("/login");
@@ -71,6 +74,7 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+// route where logged in users can edit URLs
 app.get("/urls/:shortURL", (req, res) => {
   let data = urlsForUser(req.session["user_id"]);
   if (!data.hasOwnProperty(req.params.shortURL)) {
@@ -91,6 +95,7 @@ app.post("/urls/:shortURL", (req, res) => {
   }
 });
 
+// route where logged in users can delete URLs
 app.post("/urls/:shortURL/delete", (req, res) => {
   let data = urlsForUser(req.session["user_id"]);
   if (!data.hasOwnProperty(req.params.shortURL)) {
